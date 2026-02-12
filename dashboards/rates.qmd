@@ -1,1 +1,45 @@
+---
+title: "Interest Rates"
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+source("R/00-config.R")
+source("R/01-helpers.R")
+source("R/api-fred.R")
+source("R/parse-rates.R")
+source("R/viz-timeseries.R")
+source("R/viz-yieldcurve.R")
+source("R/forecast-nextq.R")
+
+INTERACTIVE <- FALSE  # flip to TRUE later
+
+rates <- get_rates_bundle(observation_start = "1990-01-01", use_cache = TRUE)
+p <- plot_timeseries(rates, "Selected U.S. Rates (FRED)", ylab = "Percent")
+maybe_interactive(p, INTERACTIVE)
+
+p_spread <- plot_spread_10y_2y(rates)
+maybe_interactive(p_spread, INTERACTIVE)
+
+ff <- rates |> filter(series_id == "DFF") |> select(date, value)
+band <- forecast_next_quarter(ff)
+
+p2 <- ggplot(ff, aes(date, value)) +
+  geom_line(linewidth = 0.7, na.rm = TRUE) +
+  geom_ribbon(data = band, aes(ymin = lo95, ymax = hi95),
+              inherit.aes = FALSE, alpha = 0.15) +
+  geom_ribbon(data = band, aes(ymin = lo80, ymax = hi80),
+              inherit.aes = FALSE, alpha = 0.25) +
+  geom_line(data = band, aes(y = mean), inherit.aes = FALSE, linewidth = 0.7) +
+  labs(title = "Fed Funds: Model-based Forecast Bands (Next 3 Months)",
+       x = NULL, y = "Percent") +
+  theme_minimal(base_size = 12)
+
+maybe_interactive(p2, INTERACTIVE)
+
+
+
+```
 

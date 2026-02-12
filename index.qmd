@@ -2,10 +2,16 @@
 title: "Gov Dashboards"
 ---
 
-This site hosts reproducible dashboards using U.S. government data sources.
+This site contains reproducible dashboards built from government/statistical sources.
 
-## Design goals
+## Framework contract
 
-- **Reusable pipeline**: API → clean → visualize → (optional) forecast band
-- **Modular charts**: plots are functions you can reuse in lectures, papers, or other dashboards
-- **Reproducible builds** with `renv` and GitHub Actions
+Each indicator follows the same pipeline:
+
+1. **API pull** → raw tibble
+2. **Parse/clean** → standardized tibble: `date`, `value`, `series_id`, `label`, `freq`
+3. **Visualization** → modular plot function returning a `ggplot` (optionally plotly)
+
+## Notes
+- Static charts by default (ggplot).
+- Interactive charts are opt-in (plotly), controlled per dashboard.

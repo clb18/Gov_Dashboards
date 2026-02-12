@@ -1,1 +1,14 @@
+---
 
+# 8) Inflation / Labor / GDP scaffolds (ready to fill in)
+
+## `dashboards/inflation.qmd`
+```markdown
+---
+title: "Inflation"
+execute:
+  warning: false
+  message: false
+---
+
+Work in progress: CPI via BLS API (plus optional PCE via BEA).

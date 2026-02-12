@@ -1,1 +1,15 @@
+# Centralized package loads (keep consistent across all dashboards)
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(purrr)
+  library(readr)
+  library(lubridate)
+  library(ggplot2)
+  library(scales)
+  library(httr2)
+  library(jsonlite)
+})
 
+# Optional (only used when interactive is requested)
+# install.packages("plotly")

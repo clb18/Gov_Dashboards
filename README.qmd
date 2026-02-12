@@ -1,0 +1,17 @@
+# Gov_Dashboards
+
+Quarto + R dashboards using public economic data.
+
+## Framework contract
+1) API pull → raw tibble/JSON  
+2) Parse/clean → standardized table (`date`, `value`, `series_id`, `label`, `freq`)  
+3) Visualize → reusable plot functions (ggplot; optional plotly)
+
+## Secrets
+Set GitHub repo secrets (Settings → Secrets and variables → Actions):
+- FRED_API_KEY
+- BLS_API_KEY (later)
+- BEA_API_KEY (later)
+
+## Reproducibility
+Use `renv` to lock package versions.

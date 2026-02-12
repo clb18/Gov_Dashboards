@@ -1,1 +1,8 @@
+---
+title: "GDP"
+execute:
+  warning: false
+  message: false
+---
 
+Work in progress: Real GDP via BEA API (NIPA).

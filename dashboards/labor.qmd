@@ -1,1 +1,8 @@
+---
+title: "Labor Market"
+execute:
+  warning: false
+  message: false
+---
 
+Work in progress: Unemployment rate via BLS API (CPS).
