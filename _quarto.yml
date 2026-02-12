@@ -1,1 +1,28 @@
-The site yaml document
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Gov Dashboards"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: dashboards/rates.qmd
+        text: Interest Rates
+      - href: dashboards/inflation.qmd
+        text: Inflation
+      - href: dashboards/labor.qmd
+        text: Labor
+      - href: dashboards/gdp.qmd
+        text: GDP
+  page-footer:
+    left: "Built with Quarto + R"
+    right: "Data: BLS, BEA, FRED"
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
+    code-tools: true
