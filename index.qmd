@@ -1,1 +1,11 @@
-index file
+---
+title: "Gov Dashboards"
+---
+
+This site hosts reproducible dashboards using U.S. government data sources.
+
+## Design goals
+
+- **Reusable pipeline**: API → clean → visualize → (optional) forecast band
+- **Modular charts**: plots are functions you can reuse in lectures, papers, or other dashboards
+- **Reproducible builds** with `renv` and GitHub Actions
