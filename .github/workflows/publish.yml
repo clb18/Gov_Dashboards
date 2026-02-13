@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
 
     steps:
       - name: Check out repository
@@ -35,6 +37,18 @@ jobs:
         uses: r-lib/actions/setup-renv@v2
         with:
           cache-version: 1
+
+      - name: Ensure gh-pages branch exists
+        run: |
+          if ! git ls-remote --exit-code --heads origin gh-pages; then
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "Initializing gh-pages" > index.html
+            git add index.html
+            git commit -m "Initialize gh-pages"
+            git push origin gh-pages
+            git checkout main
+          fi
 
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
