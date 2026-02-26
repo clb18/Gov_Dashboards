@@ -1,0 +1,221 @@
+---
+title: "Unemployment Dashboard"
+subtitle: "Sample Data Demonstration"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+## Overview
+
+This dashboard demonstrates unemployment data visualizations using sample data that mimics Bureau of Labor Statistics (BLS) data structure. Once finalized, these visualizations will connect to real BLS API data.
+
+**Data Range:** January 2020 - February 2025 (sample data)
+
+```{r setup}
+# Load required packages
+library(tidyverse)
+library(plotly)
+library(lubridate)
+library(scales)
+library(knitr)
+
+# Source visualization functions
+source("viz_unemployment.R")
+
+# Load sample data
+unemployment_data <- readRDS("sample_unemployment_data.rds")
+```
+
+## Key Metrics
+
+```{r summary-metrics}
+# Get summary for United States
+summary <- get_unemployment_summary(unemployment_data, "United States")
+
+# Create metrics display
+metrics_df <- tibble(
+  Metric = c(
+    "Current Unemployment Rate",
+    "Month-over-Month Change",
+    "Year-over-Year Change",
+    "Unemployed Persons",
+    "Labor Force"
+  ),
+  Value = c(
+    paste0(round(summary$current_rate, 1), "%"),
+    paste0(ifelse(summary$mom_change > 0, "+", ""), 
+           round(summary$mom_change, 2), " pp"),
+    paste0(ifelse(summary$yoy_change > 0, "+", ""), 
+           round(summary$yoy_change, 2), " pp"),
+    paste0(round(summary$unemployed / 1000, 1), "M"),
+    paste0(round(summary$labor_force / 1000, 1), "M")
+  )
+)
+
+kable(metrics_df, align = c("l", "r"))
+```
+
+*Data as of `r format(summary$current_date, "%B %Y")`*
+
+---
+
+## National Trend
+
+Historical unemployment rate for the United States, showing the impact of COVID-19 and subsequent recovery.
+
+```{r national-trend, fig.width=10, fig.height=5}
+viz_unemployment_trend(
+  unemployment_data, 
+  areas = "United States",
+  show_recessions = TRUE
+)
+```
+
+**Key Observations:**
+
+- Sharp spike in unemployment during COVID-19 pandemic (April 2020: ~14.7%)
+- Gradual recovery through 2020-2021
+- Stabilization at pre-pandemic levels by late 2022
+- Current rate hovering around 4.0-4.1%
+
+---
+
+## State Comparisons
+
+### Current Unemployment Rates
+
+Top 10 states by current unemployment rate:
+
+```{r state-comparison, fig.width=10, fig.height=6}
+viz_unemployment_by_area(
+  unemployment_data,
+  n_areas = 10,
+  sort_desc = TRUE
+)
+```
+
+### State Trends Over Time
+
+Comparison of unemployment trends across selected states:
+
+```{r state-trends, fig.width=10, fig.height=8}
+top_states <- c("California", "Texas", "Florida", "New York", 
+                "Pennsylvania", "Illinois")
+
+viz_unemployment_trend(
+  unemployment_data,
+  areas = top_states,
+  show_recessions = FALSE
+)
+```
+
+---
+
+## Recent Changes
+
+### Month-over-Month Changes
+
+Recent monthly changes in the national unemployment rate:
+
+```{r mom-changes, fig.width=10, fig.height=5}
+viz_unemployment_change(
+  unemployment_data,
+  area = "United States",
+  n_months = 12
+)
+```
+
+### Year-over-Year Comparison
+
+How do current unemployment rates compare to one year ago?
+
+```{r yoy-comparison, fig.width=10, fig.height=5}
+comparison_areas <- c("United States", "California", "Texas", "Florida")
+
+viz_unemployment_yoy(
+  unemployment_data,
+  areas = comparison_areas
+)
+```
+
+---
+
+## Regional Analysis
+
+Small multiples view of unemployment trends across different states:
+
+```{r regional-facets, fig.width=12, fig.height=8}
+viz_unemployment_facets(
+  unemployment_data,
+  areas = c("California", "Texas", "Florida", "New York", 
+            "Pennsylvania", "Illinois", "Ohio", "Georgia", 
+            "North Carolina", "Michigan")
+)
+```
+
+---
+
+## Data Details
+
+### Sample Data Structure
+
+```{r data-structure}
+# Show structure of the data
+glimpse(unemployment_data)
+```
+
+### Latest Values by State
+
+```{r state-table}
+latest_date <- max(unemployment_data$date)
+
+state_summary <- unemployment_data %>%
+  filter(date == latest_date, area_type == "State") %>%
+  arrange(desc(unemployment_rate)) %>%
+  select(
+    State = area,
+    `Unemployment Rate` = unemployment_rate,
+    `Labor Force` = labor_force,
+    `Employed` = employed,
+    `Unemployed` = unemployed
+  ) %>%
+  mutate(
+    `Unemployment Rate` = paste0(round(`Unemployment Rate`, 1), "%"),
+    `Labor Force` = comma(round(`Labor Force`)),
+    Employed = comma(round(Employed)),
+    Unemployed = comma(round(Unemployed))
+  )
+
+kable(state_summary)
+```
+
+---
+
+## Next Steps
+
+1. **Connect to Real BLS API** - Replace sample data with live API calls
+2. **Add Forecasting** - Implement time series forecasting with confidence intervals
+3. **Interactive Filters** - Add date range selectors and state filters
+4. **Export Functions** - Package visualization functions for reuse
+5. **Deploy to GitHub Pages** - Publish dashboard online
+
+---
+
+## Technical Notes
+
+**Visualization Functions:** All charts use the modular functions defined in `viz_unemployment.R`. Each function can be used independently or combined in custom dashboards.
+
+**Data Source (when connected to API):** Bureau of Labor Statistics (BLS) - Series IDs for unemployment rates vary by geographic area.
+
+**Packages Used:** tidyverse, ggplot2, plotly, lubridate, scales
+
+**Interactive Elements:** Hover over any chart to see detailed values. Click legend items to toggle series visibility.
