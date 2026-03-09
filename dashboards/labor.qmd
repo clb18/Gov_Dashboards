@@ -5,4 +5,74 @@ execute:
   message: false
 ---
 
-Work in progress: Unemployment rate via BLS API (CPS).
+```{r setup}
+# ── Source all required R modules ─────────────────────────────────────────────
+# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)
+# 01_helpers.R   → caching and environment variable utilities
+# API_bls.R      → raw BLS API connector
+# mock_data.R    → synthetic data used when USE_MOCK = TRUE
+# parse_cpi.R    → provides parse_bls_series() (shared parser, sourced first)
+# parse_labor.R  → get_labor_bundle() wrapper
+# viz_timeseries.R → maybe_interactive() wrapper for plotly
+# viz_labor.R    → plot_unrate(), plot_unrate_forecast()
+# forecast_nextq.R → forecast_next_quarter() ARIMA model
+
+source("R/00_config.R")
+source("R/01_helpers.R")
+source("R/API_bls.R")
+source("R/mock_data.R")
+source("R/parse_cpi.R")      # provides parse_bls_series() used by parse_labor.R
+source("R/parse_labor.R")
+source("R/viz_timeseries.R")
+source("R/viz_labor.R")
+source("R/forecast_nextq.R")
+
+# ── Mock vs. live data ────────────────────────────────────────────────────────
+# USE_MOCK = TRUE  → synthetic data, no API key needed (current default)
+# When BLS_API_KEY is added to GitHub Secrets, change to:
+#   USE_MOCK <- Sys.getenv("BLS_API_KEY") == ""
+USE_MOCK    <- TRUE
+INTERACTIVE <- FALSE   # flip to TRUE for plotly hover/zoom
+```
+
+## Unemployment Rate (Full History)
+
+```{r labor-load}
+# Fetch (or mock) the U-3 Unemployment Rate, Seasonally Adjusted.
+# Output: standard tibble — date, value (%), series_id, label, freq
+labor <- get_labor_bundle(
+  start_year = 2000,
+  use_mock   = USE_MOCK,
+  use_cache  = TRUE,
+  cache      = TRUE
+)
+```
+
+```{r plot-unrate}
+# Chart 1: Full unemployment rate history with NBER recession shading.
+# Grey bands mark officially designated recession periods.
+# To use this chart alone in a presentation: copy just this chunk.
+p_unrate <- plot_unrate(labor)
+maybe_interactive(p_unrate, INTERACTIVE)
+```
+
+## 3-Month Unemployment Forecast
+
+```{r plot-unrate-forecast}
+# Chart 2: Recent unemployment + ARIMA model forecast for the next 3 months.
+# history_n = 60 shows the last 5 years for readability.
+# Shaded bands represent 80% and 95% confidence intervals.
+# To use this chart alone in a presentation: copy just this chunk.
+p_unrate_forecast <- plot_unrate_forecast(labor, history_n = 60)
+maybe_interactive(p_unrate_forecast, INTERACTIVE)
+```
+
+---
+
+::: {.callout-note}
+**Data source:** U.S. Bureau of Labor Statistics (BLS), Current Population
+Survey (CPS). U-3 Unemployment Rate, Seasonally Adjusted (series LNS14000000).
+Released monthly on the first Friday of the following month. Recession shading
+based on NBER Business Cycle Dating Committee designations. Forecast produced
+by an ARIMA model; confidence intervals reflect model uncertainty only.
+:::

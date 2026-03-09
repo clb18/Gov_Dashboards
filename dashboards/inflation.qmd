@@ -1,14 +1,86 @@
 ---
-
-# 8) Inflation / Labor / GDP scaffolds (ready to fill in)
-
-## `dashboards/inflation.qmd`
-```markdown
----
 title: "Inflation"
 execute:
   warning: false
   message: false
 ---
 
-Work in progress: CPI via BLS API (plus optional PCE via BEA).
+```{r setup}
+# ── Source all required R modules ─────────────────────────────────────────────
+# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)
+# 01_helpers.R   → caching and environment variable utilities
+# API_bls.R      → raw BLS API connector (POST request, returns JSON)
+# mock_data.R    → synthetic data used when USE_MOCK = TRUE
+# parse_cpi.R    → cleans BLS JSON → standard tibble; provides get_cpi_bundle()
+# viz_timeseries.R → maybe_interactive() wrapper for plotly
+# viz_inflation.R → plot_cpi_index(), plot_cpi_yoy(), plot_cpi_forecast()
+# forecast_nextq.R → forecast_next_quarter() ARIMA model
+
+source("R/00_config.R")
+source("R/01_helpers.R")
+source("R/API_bls.R")
+source("R/mock_data.R")
+source("R/parse_cpi.R")
+source("R/viz_timeseries.R")
+source("R/viz_inflation.R")
+source("R/forecast_nextq.R")
+
+# ── Mock vs. live data ────────────────────────────────────────────────────────
+# USE_MOCK = TRUE  → synthetic data, no API key needed (current default)
+# When BLS_API_KEY is added to GitHub Secrets, change to:
+#   USE_MOCK <- Sys.getenv("BLS_API_KEY") == ""
+# No other changes needed — all functions below accept either data source.
+USE_MOCK    <- TRUE
+INTERACTIVE <- FALSE   # flip to TRUE for plotly hover/zoom
+```
+
+## Price Index Level
+
+```{r cpi-load}
+# Fetch (or mock) the CPI-U All Items, Seasonally Adjusted series.
+# Output: standard tibble — date, value (index), series_id, label, freq
+cpi <- get_cpi_bundle(
+  start_year = 2000,
+  use_mock   = USE_MOCK,
+  use_cache  = TRUE,
+  cache      = TRUE
+)
+```
+
+```{r plot-cpi-index}
+# Chart 1: Raw index level — shows cumulative price growth over time.
+# To use this chart alone in a presentation: copy just this chunk.
+p_cpi_index <- plot_cpi_index(cpi)
+maybe_interactive(p_cpi_index, INTERACTIVE)
+```
+
+## Year-over-Year Inflation Rate
+
+```{r plot-cpi-yoy}
+# Chart 2: YoY % change — the "headline inflation" number reported in the news.
+# Dashed line marks the Fed's 2% inflation target.
+# To use this chart alone in a presentation: copy just this chunk.
+p_cpi_yoy <- plot_cpi_yoy(cpi)
+maybe_interactive(p_cpi_yoy, INTERACTIVE)
+```
+
+## 3-Month Inflation Forecast
+
+```{r plot-cpi-forecast}
+# Chart 3: Recent YoY inflation + ARIMA model forecast for the next 3 months.
+# Shaded bands represent 80% and 95% confidence intervals.
+# history_n = 60 shows the last 5 years for readability.
+# To use this chart alone in a presentation: copy just this chunk.
+p_cpi_forecast <- plot_cpi_forecast(cpi, history_n = 60)
+maybe_interactive(p_cpi_forecast, INTERACTIVE)
+```
+
+---
+
+::: {.callout-note}
+**Data source:** U.S. Bureau of Labor Statistics (BLS), CPI-U All Items
+Seasonally Adjusted (series CUSR0000SA0). Released monthly, typically in the
+second week of the following month. Forecast produced by an ARIMA model fit to
+the YoY % change series; confidence intervals reflect model uncertainty only
+and do not incorporate external shocks.
+:::

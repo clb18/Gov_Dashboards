@@ -5,41 +5,115 @@ execute:
   message: false
 ---
 
-```{r}
-source("R/00-config.R")
-source("R/01-helpers.R")
-source("R/api-fred.R")
-source("R/parse-rates.R")
-source("R/viz-timeseries.R")
-source("R/viz-yieldcurve.R")
-source("R/forecast-nextq.R")
+```{r setup}
+# ── Source all required R modules ─────────────────────────────────────────────
+# Each file handles one responsibility:
+#   00_config.R   → package loads (shared across all dashboards)
+#   01_helpers.R  → caching utilities and small helper functions
+#   API_fred.R    → raw FRED API connector (returns tibble)
+#   parse_rates.R → cleans/labels raw FRED data; provides get_rates_bundle()
+#   viz_timeseries.R → plot_timeseries(), maybe_interactive()
+#   viz_yieldcurve.R → plot_spread_10y_2y()
+#   forecast_nextq.R → forecast_next_quarter() with 80/95% confidence bands
+#   mock_data.R   → realistic fake data used when USE_MOCK = TRUE
 
-INTERACTIVE <- FALSE  # flip to TRUE later
+source("R/00_config.R")
+source("R/01_helpers.R")
+source("R/API_fred.R")
+source("R/mock_data.R")
+source("R/parse_rates.R")
+source("R/viz_timeseries.R")
+source("R/viz_yieldcurve.R")
+source("R/forecast_nextq.R")
 
-rates <- get_rates_bundle(observation_start = "1990-01-01", use_cache = TRUE)
-p <- plot_timeseries(rates, "Selected U.S. Rates (FRED)", ylab = "Percent")
-maybe_interactive(p, INTERACTIVE)
-
-p_spread <- plot_spread_10y_2y(rates)
-maybe_interactive(p_spread, INTERACTIVE)
-
-ff <- rates |> filter(series_id == "DFF") |> select(date, value)
-band <- forecast_next_quarter(ff)
-
-p2 <- ggplot(ff, aes(date, value)) +
-  geom_line(linewidth = 0.7, na.rm = TRUE) +
-  geom_ribbon(data = band, aes(ymin = lo95, ymax = hi95),
-              inherit.aes = FALSE, alpha = 0.15) +
-  geom_ribbon(data = band, aes(ymin = lo80, ymax = hi80),
-              inherit.aes = FALSE, alpha = 0.25) +
-  geom_line(data = band, aes(y = mean), inherit.aes = FALSE, linewidth = 0.7) +
-  labs(title = "Fed Funds: Model-based Forecast Bands (Next 3 Months)",
-       x = NULL, y = "Percent") +
-  theme_minimal(base_size = 12)
-
-maybe_interactive(p2, INTERACTIVE)
-
-
-
+# ── Mock vs. live data ────────────────────────────────────────────────────────
+# USE_MOCK auto-detects whether FRED_API_KEY is available.
+# When running locally without a key, mock data is used automatically.
+# In CI (GitHub Actions), FRED_API_KEY is injected via Secrets → live data used.
+USE_MOCK     <- Sys.getenv("FRED_API_KEY") == ""
+INTERACTIVE  <- FALSE   # flip to TRUE for plotly hover/zoom
 ```
 
+## Selected U.S. Interest Rates
+
+```{r rates-load}
+# Pull (or mock) all three rate series in one call.
+# Output: standardized tibble with columns date, value, series_id, label, freq
+rates <- get_rates_bundle(
+  observation_start = "1990-01-01",
+  use_mock          = USE_MOCK,
+  use_cache         = TRUE,
+  cache             = TRUE
+)
+```
+
+```{r plot-rates}
+# Chart 1: All three series on one panel (Fed Funds, 2Y, 10Y Treasury)
+# Use p_rates on its own in a presentation to show just this chart.
+p_rates <- plot_timeseries(
+  rates,
+  title = "Selected U.S. Interest Rates (FRED)",
+  ylab  = "Percent"
+)
+maybe_interactive(p_rates, INTERACTIVE)
+```
+
+## 10Y – 2Y Treasury Spread (Yield Curve Indicator)
+
+```{r plot-spread}
+# Chart 2: Yield curve spread.
+# Negative values (inversion) historically precede recessions.
+# Use p_spread on its own in a presentation to show just this chart.
+p_spread <- plot_spread_10y_2y(rates)
+maybe_interactive(p_spread, INTERACTIVE)
+```
+
+## Fed Funds Rate: 3-Month Forecast
+
+```{r plot-forecast}
+# Chart 3: ARIMA model fit to monthly Fed Funds Rate.
+# Shaded bands: inner = 80% confidence interval, outer = 95%.
+# Use p_ff_forecast on its own in a presentation to show just this chart.
+ff <- rates |>
+  dplyr::filter(series_id == "DFF") |>
+  dplyr::select(date, value)
+
+band <- forecast_next_quarter(ff)
+
+p_ff_forecast <- ggplot(ff, aes(date, value)) +
+  geom_line(linewidth = 0.7, na.rm = TRUE, color = "#2c7bb6") +
+  # 95% confidence band (lighter)
+  geom_ribbon(
+    data        = band,
+    aes(ymin = lo95, ymax = hi95),
+    inherit.aes = FALSE,
+    fill        = "#2c7bb6",
+    alpha       = 0.15
+  ) +
+  # 80% confidence band (darker)
+  geom_ribbon(
+    data        = band,
+    aes(ymin = lo80, ymax = hi80),
+    inherit.aes = FALSE,
+    fill        = "#2c7bb6",
+    alpha       = 0.25
+  ) +
+  # Forecast mean line
+  geom_line(
+    data        = band,
+    aes(y = mean),
+    inherit.aes = FALSE,
+    linewidth   = 0.8,
+    linetype    = "dashed",
+    color       = "#d7191c"
+  ) +
+  labs(
+    title    = "Fed Funds Rate: Model-Based Forecast (Next 3 Months)",
+    subtitle = "Shaded bands: 80% and 95% confidence intervals",
+    x        = NULL,
+    y        = "Percent"
+  ) +
+  theme_minimal(base_size = 12)
+
+maybe_interactive(p_ff_forecast, INTERACTIVE)
+```

@@ -1,0 +1,87 @@
+# .github/workflows/update-data.yml
+#
+# Scheduled workflow: fetches fresh data from APIs and re-publishes the site.
+#
+# SCHEDULE RATIONALE:
+#   BLS releases CPI on the 2nd or 3rd Wednesday of the following month.
+#   BLS releases unemployment on the first Friday of the following month.
+#   BEA releases GDP advance estimate ~4 weeks after quarter-end.
+#   FRED rates are updated daily but a monthly refresh is sufficient here.
+#
+# We run on the 15th of each month at 10:00 AM ET (15:00 UTC) to reliably
+# capture CPI and unemployment for that month's release window.
+# A second run on the 15th of the second month of each quarter (Feb, May,
+# Aug, Nov) captures the BEA GDP advance estimate.
+#
+# HOW TO ACTIVATE:
+#   This workflow is already present but cron jobs only fire on the DEFAULT
+#   branch (usually main). Push this file to main to enable the schedule.
+#   You can also trigger it manually at any time via "Run workflow" in the
+#   GitHub Actions tab.
+#
+# API KEYS (GitHub Secrets → Settings → Secrets and Variables → Actions):
+#   FRED_API_KEY → already configured ✅
+#   BLS_API_KEY  → add when available
+#   BEA_API_KEY  → add when available
+
+on:
+  # Run on the 15th of every month at 15:00 UTC (10:00 AM ET)
+  # This reliably captures BLS CPI and unemployment after their release windows.
+  schedule:
+    - cron: '0 15 15 * *'
+
+  # Allow manual trigger from the GitHub Actions tab at any time
+  workflow_dispatch:
+
+name: Scheduled Data Update
+
+jobs:
+  update-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies for R packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3.2'
+
+      - name: Install R dependencies via renv
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: 1
+
+      # Delete cached CSVs so the render always fetches fresh data from the APIs.
+      # Without this step, the cached files from the previous run would be used.
+      - name: Clear data cache
+        run: |
+          echo "Clearing data/cache/ to force fresh API pulls..."
+          rm -f data/cache/*.csv
+          echo "Cache cleared."
+
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          BLS_API_KEY:  ${{ secrets.BLS_API_KEY }}
+          BEA_API_KEY:  ${{ secrets.BEA_API_KEY }}

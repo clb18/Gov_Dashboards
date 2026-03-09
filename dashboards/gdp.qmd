@@ -5,4 +5,76 @@ execute:
   message: false
 ---
 
-Work in progress: Real GDP via BEA API (NIPA).
+```{r setup}
+# ── Source all required R modules ─────────────────────────────────────────────
+# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)
+# 01_helpers.R   → caching and environment variable utilities
+# API_bea.R      → raw BEA API connector
+# mock_data.R    → synthetic data used when USE_MOCK = TRUE
+# parse_gdp.R    → parse_bea_gdp() + get_gdp_bundle()
+# viz_timeseries.R → maybe_interactive() wrapper for plotly
+# viz_gdp.R      → plot_gdp_growth(), plot_gdp_forecast()
+# forecast_nextq.R → forecast_next_quarter() ARIMA model
+
+source("R/00_config.R")
+source("R/01_helpers.R")
+source("R/API_bea.R")
+source("R/mock_data.R")
+source("R/parse_gdp.R")
+source("R/viz_timeseries.R")
+source("R/viz_gdp.R")
+source("R/forecast_nextq.R")
+
+# ── Mock vs. live data ────────────────────────────────────────────────────────
+# USE_MOCK = TRUE  → synthetic data, no API key needed (current default)
+# When BEA_API_KEY is added to GitHub Secrets, change to:
+#   USE_MOCK <- Sys.getenv("BEA_API_KEY") == ""
+USE_MOCK    <- TRUE
+INTERACTIVE <- FALSE   # flip to TRUE for plotly hover/zoom
+```
+
+## Quarterly GDP Growth (Full History)
+
+```{r gdp-load}
+# Fetch (or mock) real GDP growth — annualized % change from prior quarter.
+# Output: standard tibble — date (first month of quarter), value (%), series_id,
+#         label, freq = "Q"
+gdp <- get_gdp_bundle(
+  start_year = 2000,
+  use_mock   = USE_MOCK,
+  use_cache  = TRUE,
+  cache      = TRUE
+)
+```
+
+```{r plot-gdp-growth}
+# Chart 1: Bar chart of annualized GDP growth by quarter.
+# Green = expansion, red/pink = contraction.
+# COVID collapse (Q2 2020) and rebound (Q3 2020) are clearly visible.
+# To use this chart alone in a presentation: copy just this chunk.
+p_gdp_growth <- plot_gdp_growth(gdp)
+maybe_interactive(p_gdp_growth, INTERACTIVE)
+```
+
+## 3-Quarter GDP Forecast
+
+```{r plot-gdp-forecast}
+# Chart 2: Recent GDP quarters + ARIMA model forecast for the next 3 quarters.
+# history_n = 20 shows the last 5 years (20 quarters) for context.
+# Shaded bands represent 80% and 95% confidence intervals.
+# To use this chart alone in a presentation: copy just this chunk.
+p_gdp_forecast <- plot_gdp_forecast(gdp, history_n = 20)
+maybe_interactive(p_gdp_forecast, INTERACTIVE)
+```
+
+---
+
+::: {.callout-note}
+**Data source:** U.S. Bureau of Economic Analysis (BEA), National Income and
+Product Accounts (NIPA) Table 1.1.1 — Percent Change from Preceding Period in
+Real Gross Domestic Product (series A191RL1Q225SBEA). Seasonally Adjusted
+Annual Rate (SAAR). Advance estimate released ~4 weeks after quarter-end;
+preliminary and final revisions follow in subsequent months. Forecast produced
+by an ARIMA model; confidence intervals reflect model uncertainty only and
+should not be interpreted as policy projections.
+:::
