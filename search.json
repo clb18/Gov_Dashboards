@@ -1,0 +1,121 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Gov Dashboards",
+    "section": "",
+    "text": "This site contains reproducible dashboards built from government/statistical sources."
+  },
+  {
+    "objectID": "index.html#framework-contract",
+    "href": "index.html#framework-contract",
+    "title": "Gov Dashboards",
+    "section": "Framework contract",
+    "text": "Framework contract\nEach indicator follows the same pipeline:\n\nAPI pull → raw tibble\nParse/clean → standardized tibble: date, value, series_id, label, freq\nVisualization → modular plot function returning a ggplot (optionally plotly)"
+  },
+  {
+    "objectID": "index.html#notes",
+    "href": "index.html#notes",
+    "title": "Gov Dashboards",
+    "section": "Notes",
+    "text": "Notes\n\nStatic charts by default (ggplot).\nInteractive charts are opt-in (plotly), controlled per dashboard."
+  },
+  {
+    "objectID": "dashboards/labor.html",
+    "href": "dashboards/labor.html",
+    "title": "Labor Market",
+    "section": "",
+    "text": "Code\n# ── Source all required R modules ─────────────────────────────────────────────\n# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)\n# 01_helpers.R   → caching and environment variable utilities\n# API_bls.R      → raw BLS API connector\n# mock_data.R    → synthetic data used when USE_MOCK = TRUE\n# parse_cpi.R    → provides parse_bls_series() (shared parser, sourced first)\n# parse_labor.R  → get_labor_bundle() wrapper\n# viz_timeseries.R → maybe_interactive() wrapper for plotly\n# viz_labor.R    → plot_unrate(), plot_unrate_forecast()\n# forecast_nextq.R → forecast_next_quarter() ARIMA model\n\nsource(\"R/00_config.R\")\nsource(\"R/01_helpers.R\")\nsource(\"R/API_bls.R\")\nsource(\"R/mock_data.R\")\nsource(\"R/parse_cpi.R\")      # provides parse_bls_series() used by parse_labor.R\nsource(\"R/parse_labor.R\")\nsource(\"R/viz_timeseries.R\")\nsource(\"R/viz_labor.R\")\nsource(\"R/forecast_nextq.R\")\n\n# ── Mock vs. live data ────────────────────────────────────────────────────────\n# USE_MOCK auto-detects whether BLS_API_KEY is available.\n# Locally: set BLS_API_KEY in ~/.Renviron\n# In CI:   set BLS_API_KEY in GitHub Secrets\nUSE_MOCK    &lt;- Sys.getenv(\"BLS_API_KEY\") == \"\"\nINTERACTIVE &lt;- FALSE   # flip to TRUE for plotly hover/zoom"
+  },
+  {
+    "objectID": "dashboards/labor.html#unemployment-rate-full-history",
+    "href": "dashboards/labor.html#unemployment-rate-full-history",
+    "title": "Labor Market",
+    "section": "Unemployment Rate (Full History)",
+    "text": "Unemployment Rate (Full History)\n\n\nCode\n# Fetch (or mock) the U-3 Unemployment Rate, Seasonally Adjusted.\n# Output: standard tibble — date, value (%), series_id, label, freq\nlabor &lt;- get_labor_bundle(\n  start_year = 2000,\n  use_mock   = USE_MOCK,\n  use_cache  = TRUE,\n  cache      = TRUE\n)\n\n\n\n\nCode\n# Chart 1: Full unemployment rate history with NBER recession shading.\n# Grey bands mark officially designated recession periods.\n# To use this chart alone in a presentation: copy just this chunk.\np_unrate &lt;- plot_unrate(labor)\nmaybe_interactive(p_unrate, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/labor.html#month-unemployment-forecast",
+    "href": "dashboards/labor.html#month-unemployment-forecast",
+    "title": "Labor Market",
+    "section": "3-Month Unemployment Forecast",
+    "text": "3-Month Unemployment Forecast\n\n\nCode\n# Chart 2: Recent unemployment + ARIMA model forecast for the next 3 months.\n# history_n = 60 shows the last 5 years for readability.\n# Shaded bands represent 80% and 95% confidence intervals.\n# To use this chart alone in a presentation: copy just this chunk.\np_unrate_forecast &lt;- plot_unrate_forecast(labor, history_n = 60)\nmaybe_interactive(p_unrate_forecast, INTERACTIVE)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nData source: U.S. Bureau of Labor Statistics (BLS), Current Population Survey (CPS). U-3 Unemployment Rate, Seasonally Adjusted (series LNS14000000). Released monthly on the first Friday of the following month. Recession shading based on NBER Business Cycle Dating Committee designations. Forecast produced by an ARIMA model; confidence intervals reflect model uncertainty only."
+  },
+  {
+    "objectID": "dashboards/gdp.html",
+    "href": "dashboards/gdp.html",
+    "title": "GDP",
+    "section": "",
+    "text": "Code\n# ── Source all required R modules ─────────────────────────────────────────────\n# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)\n# 01_helpers.R   → caching and environment variable utilities\n# API_bea.R      → raw BEA API connector\n# mock_data.R    → synthetic data used when USE_MOCK = TRUE\n# parse_gdp.R    → parse_bea_gdp() + get_gdp_bundle()\n# viz_timeseries.R → maybe_interactive() wrapper for plotly\n# viz_gdp.R      → plot_gdp_growth(), plot_gdp_forecast()\n# forecast_nextq.R → forecast_next_quarter() ARIMA model\n\nsource(\"R/00_config.R\")\nsource(\"R/01_helpers.R\")\nsource(\"R/API_bea.R\")\nsource(\"R/mock_data.R\")\nsource(\"R/parse_gdp.R\")\nsource(\"R/viz_timeseries.R\")\nsource(\"R/viz_gdp.R\")\nsource(\"R/forecast_nextq.R\")\n\n# ── Mock vs. live data ────────────────────────────────────────────────────────\n# USE_MOCK auto-detects whether BEA_API_KEY is available.\n# Locally: set BEA_API_KEY in ~/.Renviron\n# In CI:   set BEA_API_KEY in GitHub Secrets\nUSE_MOCK    &lt;- Sys.getenv(\"BEA_API_KEY\") == \"\"\nINTERACTIVE &lt;- FALSE   # flip to TRUE for plotly hover/zoom"
+  },
+  {
+    "objectID": "dashboards/gdp.html#quarterly-gdp-growth-full-history",
+    "href": "dashboards/gdp.html#quarterly-gdp-growth-full-history",
+    "title": "GDP",
+    "section": "Quarterly GDP Growth (Full History)",
+    "text": "Quarterly GDP Growth (Full History)\n\n\nCode\n# Fetch (or mock) real GDP growth — annualized % change from prior quarter.\n# Output: standard tibble — date (first month of quarter), value (%), series_id,\n#         label, freq = \"Q\"\ngdp &lt;- get_gdp_bundle(\n  start_year = 2000,\n  use_mock   = USE_MOCK,\n  use_cache  = TRUE,\n  cache      = TRUE\n)\n\n\n\n\nCode\n# Chart 1: Bar chart of annualized GDP growth by quarter.\n# Green = expansion, red/pink = contraction.\n# COVID collapse (Q2 2020) and rebound (Q3 2020) are clearly visible.\n# To use this chart alone in a presentation: copy just this chunk.\np_gdp_growth &lt;- plot_gdp_growth(gdp)\nmaybe_interactive(p_gdp_growth, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/gdp.html#quarter-gdp-forecast",
+    "href": "dashboards/gdp.html#quarter-gdp-forecast",
+    "title": "GDP",
+    "section": "3-Quarter GDP Forecast",
+    "text": "3-Quarter GDP Forecast\n\n\nCode\n# Chart 2: Recent GDP quarters + ARIMA model forecast for the next 3 quarters.\n# history_n = 20 shows the last 5 years (20 quarters) for context.\n# Shaded bands represent 80% and 95% confidence intervals.\n# To use this chart alone in a presentation: copy just this chunk.\np_gdp_forecast &lt;- plot_gdp_forecast(gdp, history_n = 20)\nmaybe_interactive(p_gdp_forecast, INTERACTIVE)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nData source: U.S. Bureau of Economic Analysis (BEA), National Income and Product Accounts (NIPA) Table 1.1.1 — Percent Change from Preceding Period in Real Gross Domestic Product (BEA series A191RL). Seasonally Adjusted Annual Rate (SAAR). Advance estimate released ~4 weeks after quarter-end; preliminary and final revisions follow in subsequent months. Forecast produced by an ARIMA model; confidence intervals reflect model uncertainty only and should not be interpreted as policy projections."
+  },
+  {
+    "objectID": "dashboards/inflation.html",
+    "href": "dashboards/inflation.html",
+    "title": "Inflation",
+    "section": "",
+    "text": "Code\n# ── Source all required R modules ─────────────────────────────────────────────\n# 00_config.R    → shared package loads (dplyr, ggplot2, etc.)\n# 01_helpers.R   → caching and environment variable utilities\n# API_bls.R      → raw BLS API connector (POST request, returns JSON)\n# mock_data.R    → synthetic data used when USE_MOCK = TRUE\n# parse_cpi.R    → cleans BLS JSON → standard tibble; provides get_cpi_bundle()\n# viz_timeseries.R → maybe_interactive() wrapper for plotly\n# viz_inflation.R → plot_cpi_index(), plot_cpi_yoy(), plot_cpi_forecast()\n# forecast_nextq.R → forecast_next_quarter() ARIMA model\n\nsource(\"R/00_config.R\")\nsource(\"R/01_helpers.R\")\nsource(\"R/API_bls.R\")\nsource(\"R/mock_data.R\")\nsource(\"R/parse_cpi.R\")\nsource(\"R/viz_timeseries.R\")\nsource(\"R/viz_inflation.R\")\nsource(\"R/forecast_nextq.R\")\n\n# ── Mock vs. live data ────────────────────────────────────────────────────────\n# USE_MOCK auto-detects whether BLS_API_KEY is available.\n# Locally: set BLS_API_KEY in ~/.Renviron\n# In CI:   set BLS_API_KEY in GitHub Secrets\nUSE_MOCK    &lt;- Sys.getenv(\"BLS_API_KEY\") == \"\"\nINTERACTIVE &lt;- FALSE   # flip to TRUE for plotly hover/zoom"
+  },
+  {
+    "objectID": "dashboards/inflation.html#price-index-level",
+    "href": "dashboards/inflation.html#price-index-level",
+    "title": "Inflation",
+    "section": "Price Index Level",
+    "text": "Price Index Level\n\n\nCode\n# Fetch (or mock) the CPI-U All Items, Seasonally Adjusted series.\n# Output: standard tibble — date, value (index), series_id, label, freq\ncpi &lt;- get_cpi_bundle(\n  start_year = 2000,\n  use_mock   = USE_MOCK,\n  use_cache  = TRUE,\n  cache      = TRUE\n)\n\n\n\n\nCode\n# Chart 1: Raw index level — shows cumulative price growth over time.\n# To use this chart alone in a presentation: copy just this chunk.\np_cpi_index &lt;- plot_cpi_index(cpi)\nmaybe_interactive(p_cpi_index, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/inflation.html#year-over-year-inflation-rate",
+    "href": "dashboards/inflation.html#year-over-year-inflation-rate",
+    "title": "Inflation",
+    "section": "Year-over-Year Inflation Rate",
+    "text": "Year-over-Year Inflation Rate\n\n\nCode\n# Chart 2: YoY % change — the \"headline inflation\" number reported in the news.\n# Dashed line marks the Fed's 2% inflation target.\n# To use this chart alone in a presentation: copy just this chunk.\np_cpi_yoy &lt;- plot_cpi_yoy(cpi)\nmaybe_interactive(p_cpi_yoy, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/inflation.html#month-inflation-forecast",
+    "href": "dashboards/inflation.html#month-inflation-forecast",
+    "title": "Inflation",
+    "section": "3-Month Inflation Forecast",
+    "text": "3-Month Inflation Forecast\n\n\nCode\n# Chart 3: Recent YoY inflation + ARIMA model forecast for the next 3 months.\n# Shaded bands represent 80% and 95% confidence intervals.\n# history_n = 60 shows the last 5 years for readability.\n# To use this chart alone in a presentation: copy just this chunk.\np_cpi_forecast &lt;- plot_cpi_forecast(cpi, history_n = 60)\nmaybe_interactive(p_cpi_forecast, INTERACTIVE)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nData source: U.S. Bureau of Labor Statistics (BLS), CPI-U All Items Seasonally Adjusted (series CUSR0000SA0). Released monthly, typically in the second week of the following month. Forecast produced by an ARIMA model fit to the YoY % change series; confidence intervals reflect model uncertainty only and do not incorporate external shocks."
+  },
+  {
+    "objectID": "dashboards/rates.html",
+    "href": "dashboards/rates.html",
+    "title": "Interest Rates",
+    "section": "",
+    "text": "Code\n# ── Source all required R modules ─────────────────────────────────────────────\n# Each file handles one responsibility:\n#   00_config.R   → package loads (shared across all dashboards)\n#   01_helpers.R  → caching utilities and small helper functions\n#   API_fred.R    → raw FRED API connector (returns tibble)\n#   parse_rates.R → cleans/labels raw FRED data; provides get_rates_bundle()\n#   viz_timeseries.R → plot_timeseries(), maybe_interactive()\n#   viz_yieldcurve.R → plot_spread_10y_2y()\n#   forecast_nextq.R → forecast_next_quarter() with 80/95% confidence bands\n#   mock_data.R   → realistic fake data used when USE_MOCK = TRUE\n\nsource(\"R/00_config.R\")\nsource(\"R/01_helpers.R\")\nsource(\"R/API_fred.R\")\nsource(\"R/mock_data.R\")\nsource(\"R/parse_rates.R\")\nsource(\"R/viz_timeseries.R\")\nsource(\"R/viz_yieldcurve.R\")\nsource(\"R/forecast_nextq.R\")\n\n# ── Mock vs. live data ────────────────────────────────────────────────────────\n# USE_MOCK auto-detects whether FRED_API_KEY is available.\n# When running locally without a key, mock data is used automatically.\n# In CI (GitHub Actions), FRED_API_KEY is injected via Secrets → live data used.\nUSE_MOCK     &lt;- Sys.getenv(\"FRED_API_KEY\") == \"\"\nINTERACTIVE  &lt;- FALSE   # flip to TRUE for plotly hover/zoom"
+  },
+  {
+    "objectID": "dashboards/rates.html#selected-u.s.-interest-rates",
+    "href": "dashboards/rates.html#selected-u.s.-interest-rates",
+    "title": "Interest Rates",
+    "section": "Selected U.S. Interest Rates",
+    "text": "Selected U.S. Interest Rates\n\n\nCode\n# Pull (or mock) all three rate series in one call.\n# Output: standardized tibble with columns date, value, series_id, label, freq\nrates &lt;- get_rates_bundle(\n  observation_start = \"1990-01-01\",\n  use_mock          = USE_MOCK,\n  use_cache         = TRUE,\n  cache             = TRUE\n)\n\n\n\n\nCode\n# Chart 1: All three series on one panel (Fed Funds, 2Y, 10Y Treasury)\n# Use p_rates on its own in a presentation to show just this chart.\np_rates &lt;- plot_timeseries(\n  rates,\n  title = \"Selected U.S. Interest Rates (FRED)\",\n  ylab  = \"Percent\"\n)\nmaybe_interactive(p_rates, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/rates.html#y-2y-treasury-spread-yield-curve-indicator",
+    "href": "dashboards/rates.html#y-2y-treasury-spread-yield-curve-indicator",
+    "title": "Interest Rates",
+    "section": "10Y – 2Y Treasury Spread (Yield Curve Indicator)",
+    "text": "10Y – 2Y Treasury Spread (Yield Curve Indicator)\n\n\nCode\n# Chart 2: Yield curve spread.\n# Negative values (inversion) historically precede recessions.\n# Use p_spread on its own in a presentation to show just this chart.\np_spread &lt;- plot_spread_10y_2y(rates)\nmaybe_interactive(p_spread, INTERACTIVE)"
+  },
+  {
+    "objectID": "dashboards/rates.html#fed-funds-rate-3-month-forecast",
+    "href": "dashboards/rates.html#fed-funds-rate-3-month-forecast",
+    "title": "Interest Rates",
+    "section": "Fed Funds Rate: 3-Month Forecast",
+    "text": "Fed Funds Rate: 3-Month Forecast\n\n\nCode\n# Chart 3: ARIMA model fit to monthly Fed Funds Rate.\n# Shaded bands: inner = 80% confidence interval, outer = 95%.\n# Use p_ff_forecast on its own in a presentation to show just this chart.\nff &lt;- rates |&gt;\n  dplyr::filter(series_id == \"DFF\") |&gt;\n  dplyr::select(date, value)\n\nband &lt;- forecast_next_quarter(ff)\n\np_ff_forecast &lt;- ggplot(ff, aes(date, value)) +\n  geom_line(linewidth = 0.7, na.rm = TRUE, color = \"#2c7bb6\") +\n  # 95% confidence band (lighter)\n  geom_ribbon(\n    data        = band,\n    aes(x = date, ymin = lo95, ymax = hi95),\n    inherit.aes = FALSE,\n    fill        = \"#2c7bb6\",\n    alpha       = 0.15\n  ) +\n  # 80% confidence band (darker)\n  geom_ribbon(\n    data        = band,\n    aes(x = date, ymin = lo80, ymax = hi80),\n    inherit.aes = FALSE,\n    fill        = \"#2c7bb6\",\n    alpha       = 0.25\n  ) +\n  # Forecast mean line\n  geom_line(\n    data        = band,\n    aes(x = date, y = mean),\n    inherit.aes = FALSE,\n    linewidth   = 0.8,\n    linetype    = \"dashed\",\n    color       = \"#d7191c\"\n  ) +\n  labs(\n    title    = \"Fed Funds Rate: Model-Based Forecast (Next 3 Months)\",\n    subtitle = \"Shaded bands: 80% and 95% confidence intervals\",\n    x        = NULL,\n    y        = \"Percent\"\n  ) +\n  theme_minimal(base_size = 12)\n\nmaybe_interactive(p_ff_forecast, INTERACTIVE)"
+  }
+]
