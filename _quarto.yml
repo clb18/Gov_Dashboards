@@ -2,6 +2,10 @@ project:
   type: website
   output-dir: _site
   execute-dir: project
+  render:
+    - "*.qmd"
+    - "dashboards/*.qmd"
+    - "!unemployment_dashboard_demo.qmd"
 
 website:
   title: "Gov Dashboards"
