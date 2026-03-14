@@ -95,7 +95,7 @@ plot_unrate_forecast <- function(df,
     # 95% confidence band
     geom_ribbon(
       data        = band,
-      aes(ymin = lo95, ymax = hi95),
+      aes(x = date, ymin = lo95, ymax = hi95),
       inherit.aes = FALSE,
       fill        = "#377eb8",
       alpha       = 0.12
@@ -103,7 +103,7 @@ plot_unrate_forecast <- function(df,
     # 80% confidence band
     geom_ribbon(
       data        = band,
-      aes(ymin = lo80, ymax = hi80),
+      aes(x = date, ymin = lo80, ymax = hi80),
       inherit.aes = FALSE,
       fill        = "#377eb8",
       alpha       = 0.22
@@ -111,7 +111,7 @@ plot_unrate_forecast <- function(df,
     # Forecast mean line
     geom_line(
       data        = band,
-      aes(y = mean),
+      aes(x = date, y = mean),
       inherit.aes = FALSE,
       linewidth   = 0.8,
       linetype    = "dashed",

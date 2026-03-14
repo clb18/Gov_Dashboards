@@ -26,10 +26,10 @@ source("R/viz_gdp.R")
 source("R/forecast_nextq.R")
 
 # ── Mock vs. live data ────────────────────────────────────────────────────────
-# USE_MOCK = TRUE  → synthetic data, no API key needed (current default)
-# When BEA_API_KEY is added to GitHub Secrets, change to:
-#   USE_MOCK <- Sys.getenv("BEA_API_KEY") == ""
-USE_MOCK    <- TRUE
+# USE_MOCK auto-detects whether BEA_API_KEY is available.
+# Locally: set BEA_API_KEY in ~/.Renviron
+# In CI:   set BEA_API_KEY in GitHub Secrets
+USE_MOCK    <- Sys.getenv("BEA_API_KEY") == ""
 INTERACTIVE <- FALSE   # flip to TRUE for plotly hover/zoom
 ```
 
@@ -72,7 +72,7 @@ maybe_interactive(p_gdp_forecast, INTERACTIVE)
 ::: {.callout-note}
 **Data source:** U.S. Bureau of Economic Analysis (BEA), National Income and
 Product Accounts (NIPA) Table 1.1.1 — Percent Change from Preceding Period in
-Real Gross Domestic Product (series A191RL1Q225SBEA). Seasonally Adjusted
+Real Gross Domestic Product (BEA series A191RL). Seasonally Adjusted
 Annual Rate (SAAR). Advance estimate released ~4 weeks after quarter-end;
 preliminary and final revisions follow in subsequent months. Forecast produced
 by an ARIMA model; confidence intervals reflect model uncertainty only and

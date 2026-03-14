@@ -28,10 +28,10 @@ source("R/viz_labor.R")
 source("R/forecast_nextq.R")
 
 # ── Mock vs. live data ────────────────────────────────────────────────────────
-# USE_MOCK = TRUE  → synthetic data, no API key needed (current default)
-# When BLS_API_KEY is added to GitHub Secrets, change to:
-#   USE_MOCK <- Sys.getenv("BLS_API_KEY") == ""
-USE_MOCK    <- TRUE
+# USE_MOCK auto-detects whether BLS_API_KEY is available.
+# Locally: set BLS_API_KEY in ~/.Renviron
+# In CI:   set BLS_API_KEY in GitHub Secrets
+USE_MOCK    <- Sys.getenv("BLS_API_KEY") == ""
 INTERACTIVE <- FALSE   # flip to TRUE for plotly hover/zoom
 ```
 

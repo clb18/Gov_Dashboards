@@ -85,7 +85,7 @@ p_ff_forecast <- ggplot(ff, aes(date, value)) +
   # 95% confidence band (lighter)
   geom_ribbon(
     data        = band,
-    aes(ymin = lo95, ymax = hi95),
+    aes(x = date, ymin = lo95, ymax = hi95),
     inherit.aes = FALSE,
     fill        = "#2c7bb6",
     alpha       = 0.15
@@ -93,7 +93,7 @@ p_ff_forecast <- ggplot(ff, aes(date, value)) +
   # 80% confidence band (darker)
   geom_ribbon(
     data        = band,
-    aes(ymin = lo80, ymax = hi80),
+    aes(x = date, ymin = lo80, ymax = hi80),
     inherit.aes = FALSE,
     fill        = "#2c7bb6",
     alpha       = 0.25
@@ -101,7 +101,7 @@ p_ff_forecast <- ggplot(ff, aes(date, value)) +
   # Forecast mean line
   geom_line(
     data        = band,
-    aes(y = mean),
+    aes(x = date, y = mean),
     inherit.aes = FALSE,
     linewidth   = 0.8,
     linetype    = "dashed",

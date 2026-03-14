@@ -20,9 +20,9 @@
 #   GitHub Actions tab.
 #
 # API KEYS (GitHub Secrets → Settings → Secrets and Variables → Actions):
-#   FRED_API_KEY → already configured ✅
-#   BLS_API_KEY  → add when available
-#   BEA_API_KEY  → add when available
+#   FRED_API_KEY → configured ✅
+#   BLS_API_KEY  → configured ✅
+#   BEA_API_KEY  → configured ✅
 
 on:
   # Run on the 15th of every month at 15:00 UTC (10:00 AM ET)
@@ -61,7 +61,7 @@ jobs:
       - name: Install R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.3.2'
+          r-version: '4.5.2'
 
       - name: Install R dependencies via renv
         uses: r-lib/actions/setup-renv@v2

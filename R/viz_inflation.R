@@ -126,7 +126,7 @@ plot_cpi_forecast <- function(df,
     # 95% band (light)
     geom_ribbon(
       data        = band,
-      aes(ymin = lo95, ymax = hi95),
+      aes(x = date, ymin = lo95, ymax = hi95),
       inherit.aes = FALSE,
       fill        = "#e41a1c",
       alpha       = 0.12
@@ -134,7 +134,7 @@ plot_cpi_forecast <- function(df,
     # 80% band (darker)
     geom_ribbon(
       data        = band,
-      aes(ymin = lo80, ymax = hi80),
+      aes(x = date, ymin = lo80, ymax = hi80),
       inherit.aes = FALSE,
       fill        = "#e41a1c",
       alpha       = 0.22
@@ -142,7 +142,7 @@ plot_cpi_forecast <- function(df,
     # Forecast mean line
     geom_line(
       data        = band,
-      aes(y = mean),
+      aes(x = date, y = mean),
       inherit.aes = FALSE,
       linewidth   = 0.8,
       linetype    = "dashed",

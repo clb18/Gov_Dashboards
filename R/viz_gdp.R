@@ -85,7 +85,7 @@ plot_gdp_forecast <- function(df,
     # 95% forecast band
     geom_ribbon(
       data        = band,
-      aes(ymin = lo95, ymax = hi95),
+      aes(x = date, ymin = lo95, ymax = hi95),
       inherit.aes = FALSE,
       fill        = "steelblue",
       alpha       = 0.15
@@ -93,7 +93,7 @@ plot_gdp_forecast <- function(df,
     # 80% forecast band
     geom_ribbon(
       data        = band,
-      aes(ymin = lo80, ymax = hi80),
+      aes(x = date, ymin = lo80, ymax = hi80),
       inherit.aes = FALSE,
       fill        = "steelblue",
       alpha       = 0.25
@@ -101,7 +101,7 @@ plot_gdp_forecast <- function(df,
     # Forecast mean line
     geom_line(
       data        = band,
-      aes(y = mean),
+      aes(x = date, y = mean),
       inherit.aes = FALSE,
       linewidth   = 0.9,
       linetype    = "dashed",

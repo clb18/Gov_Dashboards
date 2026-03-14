@@ -3,8 +3,9 @@
 # Fetches and cleans BEA GDP data into the project's standard tibble format.
 #
 # Primary series:
-#   A191RL1Q225SBEA  → Real GDP, Percent Change from Preceding Period (annualized)
+#   A191RL  → Real GDP, Percent Change from Preceding Period (annualized)
 #   Source: BEA NIPA Table 1.1.1, Line 1
+#   Note: BEA uses short code "A191RL"; the FRED equivalent is "A191RL1Q225SBEA"
 #
 # Standard output tibble columns:
 #   date      <date>  first month of the reference quarter (e.g., 2024-01-01 = Q1)
@@ -34,7 +35,7 @@
 #' @param series_code BEA series code to extract from the Data list.
 #' @param label Human-readable label.
 #' @return Standardized tibble: date, value, series_id, label, freq = "Q".
-parse_bea_gdp <- function(json, series_code = "A191RL1Q225SBEA",
+parse_bea_gdp <- function(json, series_code = "A191RL",
                           label = "Real GDP Growth (Annualized %)") {
 
   data_list <- json$BEAAPI$Results$Data
